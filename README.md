@@ -9,6 +9,7 @@ The system processes an input retail shelf image and returns:
 ✔ Visualization image with colored bounding boxes
 
 🚀 Features
+
 ✔ YOLOv8 Object Detection
 
 Detects retail products on shelves.
