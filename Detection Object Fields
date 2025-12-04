@@ -1,0 +1,29 @@
+{
+  "detection_id": "uuid",
+  "bbox": [x1, y1, x2, y2],
+  "score": 0.91,
+  "cls": 0,
+  "group_id": "G_0"
+}
+
+#Minimal Output JSON (if no objects detected)
+{
+  "request_id": "a8f5f167-f44f-4b47-8494-2f884c2b5b0c",
+  "status": "success",
+  "runtime_s": 0.552,
+  "visualization_url": null,
+  "detections": []
+}
+
+#Error JSON Responses (All Cases)
+{
+  "status": "error",
+  "message": "No image file provided in form-data with key 'image'"
+}
+
+#Invalid/Corrupted Image
+{
+  "status": "error",
+  "message": "Invalid image",
+  "details": "<PIL error>"
+}
