@@ -1,0 +1,28 @@
+POST /api/v1/detect-and-group
+multipart/form-data
+
+
+#API Output JSON (Full Success Response)
+{
+  "request_id": "d32925ea-0f8d-4fa3-a18c-9ea9b1a4a6cf",
+  "status": "success",
+  "runtime_s": 1.384,
+  "visualization_url": "/visuals/d32925ea-0f8d.jpg",
+  
+  "detections": [
+    {
+      "detection_id": "a4d01bcb-e1bb-4b57-aa12-dc89f8e5456b",
+      "bbox": [112, 45, 260, 380],
+      "score": 0.91,
+      "cls": 0,
+      "group_id": "G_0"
+    },
+    {
+      "detection_id": "0f9cab50-fdbb-44ae-b7e5-6e7fdb7d90af",
+      "bbox": [300, 60, 420, 370],
+      "score": 0.88,
+      "cls": 0,
+      "group_id": "G_0"
+    }
+  ]
+}
