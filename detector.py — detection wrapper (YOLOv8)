@@ -1,0 +1,61 @@
+"""
+detector.py
+Wrapper around Ultralytics YOLOv8 model to perform detection.
+Provides a simple API to detect from PIL Image or from file path.
+"""
+
+from typing import List, Dict, Any
+import numpy as np
+from PIL import Image
+import torch
+from ultralytics import YOLO
+import uuid
+
+# You can change which YOLO weight to use (yolov8n is smallest & fastest)
+YOLO_WEIGHT = "yolov8n.pt"
+
+class Detector:
+    def __init__(self, model_path: str = YOLO_WEIGHT, device: str = None, conf: float = 0.30):
+        """
+        Loads model once.
+        device: 'cpu' or 'cuda' (auto-detected if None)
+        conf: confidence threshold (0-1)
+        """
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = device
+        self.conf = conf
+        # instantiate model (ultralytics will auto-download weights on first run)
+        self.model = YOLO(model_path)
+
+    def _pil_to_numpy(self, pil_img: Image.Image) -> np.ndarray:
+        """Convert PIL RGB image to numpy RGB (H,W,C)."""
+        return np.array(pil_img)
+
+    def detect_pil(self, pil_img: Image.Image) -> List[Dict[str, Any]]:
+        """
+        Detect from a PIL image.
+        Returns list of detection dicts:
+        { "detection_id": str, "bbox": [x1,y1,x2,y2], "score": float, "cls": int }
+        """
+        np_img = self._pil_to_numpy(pil_img)
+        # device arg for ultralytics predict: 0 for cuda or "cpu"
+        device_arg = 0 if self.device.startswith("cuda") else "cpu"
+        results = self.model.predict(np_img, conf=self.conf, device=device_arg, verbose=False)
+        res = results[0]
+        dets = []
+        if getattr(res, "boxes", None) is None:
+            return dets
+        for box in res.boxes:
+            # box.xyxy shape (1,4)
+            xyxy = box.xyxy[0].tolist()
+            confscore = float(box.conf[0]) if hasattr(box, "conf") else float(box.conf)
+            cls = int(box.cls[0]) if hasattr(box, "cls") else int(box.cls)
+            x1,y1,x2,y2 = map(int, xyxy)
+            dets.append({
+                "detection_id": str(uuid.uuid4()),
+                "bbox": [x1,y1,x2,y2],
+                "score": confscore,
+                "cls": cls
+            })
+        return dets
