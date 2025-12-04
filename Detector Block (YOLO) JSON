@@ -1,0 +1,64 @@
+#Detector Input
+{
+  "image": "<PIL image converted from user file>"
+}
+
+#Detector Output
+{
+  "detections": [
+    {
+      "detection_id": "uuid",
+      "bbox": [x1, y1, x2, y2],
+      "score": 0.89,
+      "cls": 0
+    }
+  ]
+}
+
+#Embedding Block (ResNet50) JSON
+#Input
+{
+  "crops": [
+    "<crop_image_0>",
+    "<crop_image_1>"
+  ]
+}
+
+#output
+{
+  "embeddings": [
+    [0.12, -0.04, 0.08, "...2048 dims..."],
+    [-0.02, 0.11, 0.07, "...2048 dims..."]
+  ]
+}
+
+#Clustering Block (DBSCAN) JSON
+#input
+{
+  "embeddings": [
+    [... 2048 dims ...],
+    [... 2048 dims ...]
+  ]
+}
+
+#Output
+{
+  "groups": [
+    "G_0",
+    "G_0",
+    "G_1"
+  ]
+}
+
+# Visualization Block JSON
+#input
+{
+  "image": "<original input image>",
+  "detections": [...],
+  "groups": [...]
+}
+
+#output
+{
+  "visualization_path": "visuals/output_user_image_1.jpg"
+}
