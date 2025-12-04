@@ -1,0 +1,11 @@
+{
+  "request_id": "uuid",
+  "num_detections": 5,
+  "detections": [
+    {"detection_id":"...", "bbox":[x1,y1,x2,y2], "score":0.92, "cls":0, "group_id":"G_0"},
+    ...
+  ],
+  "groups": [0,0,1,1,2],
+  "visualization": "/visuals/visual_uuid.jpg",
+  "runtime_s": 2.34
+}
