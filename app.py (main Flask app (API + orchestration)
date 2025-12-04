@@ -1,0 +1,108 @@
+import os
+import io
+import uuid
+import time
+from typing import List, Dict, Any
+
+from flask import Flask, request, jsonify, send_from_directory
+from PIL import Image
+
+from detector import Detector
+from grouper import Grouper
+from visualizer import Visualizer
+
+UPLOAD_DIR = "uploads"
+VISUAL_DIR = "visuals"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(VISUAL_DIR, exist_ok=True)
+
+app = Flask(__name__, static_folder=None)
+
+# Initialize modules (these load models once)
+detector = Detector()
+grouper = Grouper()
+visualizer = Visualizer(visual_dir=VISUAL_DIR)
+
+@app.route("/")
+def home():
+    return "<h3>Infilect Demo - Product Detection & Grouping API</h3>"
+
+@app.route("/visuals/<path:filename>")
+def serve_visual(filename):
+    """Serve visualization images saved in visuals/"""
+    return send_from_directory(VISUAL_DIR, filename)
+
+@app.route("/api/v1/detect-and-group", methods=["POST"])
+def detect_and_group():
+    start_time = time.time()
+
+    if "image" not in request.files:
+        return jsonify({"error": "No image file found in request (use form field 'image')"}), 400
+
+    file = request.files["image"]
+    try:
+        img_bytes = file.read()
+        image = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+    except Exception as e:
+        return jsonify({"error": "Invalid image file", "details": str(e)}), 400
+
+    # Save uploaded image for record
+    request_id = str(uuid.uuid4())
+    uploaded_path = os.path.join(UPLOAD_DIR, f"{request_id}.jpg")
+    image.save(uploaded_path)
+
+    # 1) Detection
+    dets = detector.detect_pil(image)  # list of dicts with bbox, score, cls, detection_id
+
+    # 2) If nothing detected, respond with empty detection list
+    if len(dets) == 0:
+        runtime = round(time.time() - start_time, 3)
+        return jsonify({
+            "request_id": request_id,
+            "num_detections": 0,
+            "detections": [],
+            "groups": [],
+            "visualization": None,
+            "runtime_s": runtime
+        }), 200
+
+    # 3) Crop and compute embeddings
+    crops = []
+    for d in dets:
+        x1,y1,x2,y2 = d["bbox"]
+        crop = image.crop((x1,y1,x2,y2))
+        crops.append(crop)
+
+    embeddings = grouper.embeddings_from_pil_list(crops)  # NxD numpy array or list
+
+    # 4) Cluster embeddings
+    labels = grouper.cluster_embeddings(embeddings)
+
+    # 5) Attach group ids to detections
+    for i, d in enumerate(dets):
+        lbl = int(labels[i])
+        d["group_id"] = f"G_{lbl}" if lbl != -1 else "G_noise"
+        d["embedding_index"] = i
+
+    # 6) Visualization
+    visual_filename = f"visual_{request_id}.jpg"
+    visual_path = os.path.join(VISUAL_DIR, visual_filename)
+    visualizer.draw_boxes_and_groups(image, dets, labels, out_path=visual_path)
+
+    runtime = round(time.time() - start_time, 3)
+
+    # 7) Build response
+    response = {
+        "request_id": request_id,
+        "num_detections": len(dets),
+        "detections": dets,
+        "groups": labels.tolist() if hasattr(labels, "tolist") else labels,
+        "visualization": f"/visuals/{visual_filename}",
+        "runtime_s": runtime
+    }
+
+    return jsonify(response), 200
+
+if __name__ == "__main__":
+    # Use debug=False for production-style run
+    app.run(host="0.0.0.0", port=5000, debug=False)
