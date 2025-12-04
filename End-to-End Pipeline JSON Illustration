@@ -1,0 +1,41 @@
+{
+  "input": {
+    "image": "<binary-file>"
+  },
+
+  "detector_output": {
+    "detections": [
+      {
+        "detection_id": "uuid",
+        "bbox": [112,45,260,380],
+        "score": 0.91,
+        "cls": 0
+      }
+    ]
+  },
+
+  "embedding_output": {
+    "embeddings": ["2048-dim vector ..."]
+  },
+
+  "clustering_output": {
+    "groups": ["G_0", "G_0"]
+  },
+
+  "visualization_output": {
+    "visualization_path": "visuals/request_123.jpg"
+  },
+
+  "final_output": {
+    "status": "success",
+    "detections": [
+      {
+        "detection_id": "uuid",
+        "bbox": [112,45,260,380],
+        "score": 0.91,
+        "cls": 0,
+        "group_id": "G_0"
+      }
+    ]
+  }
+}
